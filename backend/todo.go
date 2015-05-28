@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 )
 
 func newId() string {

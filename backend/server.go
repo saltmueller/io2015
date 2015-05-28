@@ -1,5 +1,8 @@
 package main
 
+// Adapted from TODO backend at
+// https://github.com/savaki/todo-backend-gin
+
 import (
 	"encoding/json"
 	"fmt"
@@ -11,7 +14,7 @@ import (
 
 var (
 	// My backend data store.
-	shareTodo = Todo{}
+	sharedTodo = Todo{}
 
 	PORT       = ":8888"
 	SERVER_URL = "http://localhost" + PORT
@@ -24,10 +27,8 @@ func main() {
 	router.HandleFunc("/todos/{id}", handleGetTodo).Methods("GET")
 	router.HandleFunc("/todos", handleCreateTodo).Methods("POST")
 	router.HandleFunc("/todos/{id}", handlePatchTodo).Methods("PATCH")
-	router.HandleFunc("/todos", handleDeleteTodo).Methods("DELETE")
-
-	// Serve the assets from the app directory.
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./app")))
+	router.HandleFunc("/todos/{id}", handleDeleteTodo).Methods("DELETE")
+	router.HandleFunc("/todos", handleDeleteAllTodos).Methods("DELETE")
 	http.Handle("/", router)
 
 	fmt.Println("Serving on " + SERVER_URL)
@@ -43,25 +44,42 @@ func sendJson(w http.ResponseWriter, data interface{}) {
 }
 
 func handleListTodos(w http.ResponseWriter, r *http.Request) {
-	sendJson(w, todo.All())
+	sendJson(w, sharedTodo.All())
 }
 
 func handleGetTodo(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	sendJson(w, todo.Find(id))
+	sendJson(w, sharedTodo.Find(id))
 }
 
 func handleCreateTodo(w http.ResponseWriter, r *http.Request) {
-	newItem := &TodoItem{}
+	var newItem TodoItem
 	if err := json.NewDecoder(r.Body).Decode(&newItem); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	sendJson(w, sharedTodo.Create(newItem, func(path string) string {
+		return SERVER_URL + path
+	}))
 }
 
 func handlePatchTodo(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	if item := sharedTodo.Find(id); item != nil {
+		if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		sendJson(w, item)
+	}
 }
 
 func handleDeleteTodo(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	sendJson(w, sharedTodo.Delete(id))
+}
+
+func handleDeleteAllTodos(w http.ResponseWriter, r *http.Request) {
+	sendJson(w, sharedTodo.DeleteAll())
 }
