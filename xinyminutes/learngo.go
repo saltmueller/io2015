@@ -1,3 +1,6 @@
+// Copied from http://learnxinyminutes.com/docs/go/
+// Removed most comments.
+
 package main
 
 import (
@@ -160,11 +163,9 @@ func sentenceFactory(mystring string) func(before, after string) string {
 }
 
 func learnDefer() (ok bool) {
-	// Deferred statements are executed just before the function returns.
 	defer fmt.Println("deferred statements execute in reverse (LIFO) order.")
 	defer fmt.Println("\nThis line is being printed first because")
-	// Defer is commonly used to close a file, so the function closing the
-	// file stays close to the function opening the file.
+
 	return true
 }
 
@@ -176,39 +177,29 @@ type pair struct {
 	x, y int
 }
 
-func (p pair) String() string { // p is called the "receiver"
-	// Sprintf is another public function in package fmt.
-	// Dot syntax references fields of p.
+func (p pair) String() string {
 	return fmt.Sprintf("(%d, %d)", p.x, p.y)
 }
 
 func learnInterfaces() {
-	// Brace syntax is a "struct literal". It evaluates to an initialized
-	// struct. The := syntax declares and initializes p to this struct.
 	p := pair{3, 4}
-	fmt.Println(p.String()) // Call String method of p, of type pair.
-	var i Stringer          // Declare i of interface type Stringer.
-	i = p                   // Valid because pair implements Stringer
-	// Call String method of i, of type Stringer. Output same as above.
+	fmt.Println(p.String())
+	var i Stringer
+	i = p
+
 	fmt.Println(i.String())
 
-	// Functions in the fmt package call the String method to ask an object
-	// for a printable representation of itself.
-	fmt.Println(p) // Output same as above. Println calls String method.
-	fmt.Println(i) // Output same as above.
+	fmt.Println(p)
+	fmt.Println(i)
 
 	learnVariadicParams("great", "learning", "here!")
 }
 
-// Functions can have variadic parameters.
 func learnVariadicParams(myStrings ...interface{}) {
-	// Iterate each value of the variadic.
-	// The underbar here is ignoring the index argument of the array.
 	for _, param := range myStrings {
 		fmt.Println("param:", param)
 	}
 
-	// Pass variadic value as a variadic parameter.
 	fmt.Println("params:", fmt.Sprintln(myStrings...))
 
 	learnErrorHandling()
@@ -216,54 +207,53 @@ func learnVariadicParams(myStrings ...interface{}) {
 
 func learnErrorHandling() {
 	m := map[int]string{3: "three", 4: "four"}
-	if x, ok := m[1]; !ok { // ok will be false because 1 is not in the map.
+	if x, ok := m[1]; !ok {
 		fmt.Println("no one there")
 	} else {
-		fmt.Print(x) // x would be the value, if it were in the map.
+		fmt.Print(x)
 	}
-	// An error value communicates not just "ok" but more about the problem.
-	if _, err := strconv.Atoi("non-int"); err != nil { // _ discards value
-		// prints 'strconv.ParseInt: parsing "non-int": invalid syntax'
+
+	if _, err := strconv.Atoi("non-int"); err != nil {
 		fmt.Println(err)
 	}
 	learnConcurrency()
 }
 
 func inc(i int, c chan int) {
-	c <- i + 1 // <- is the "send" operator when a channel appears on the left.
+	c <- i + 1
 }
 
 func learnConcurrency() {
 	c := make(chan int)
 
-	go inc(0, c) // go is a statement that starts a new goroutine.
+	go inc(0, c)
 	go inc(10, c)
 	go inc(-805, c)
 
-	fmt.Println(<-c, <-c, <-c) // channel on right, <- is "receive" operator.
+	fmt.Println(<-c, <-c, <-c)
 
-	cs := make(chan string)       // Another channel, this one handles strings.
-	ccs := make(chan chan string) // A channel of string channels.
-	go func() { c <- 84 }()       // Start a new goroutine just to send a value.
-	go func() { cs <- "wordy" }() // Again, for cs this time.
+	cs := make(chan string)
+	ccs := make(chan chan string)
+	go func() { c <- 84 }()
+	go func() { cs <- "wordy" }()
 
 	select {
-	case i := <-c: // The value received can be assigned to a variable,
+	case i := <-c:
 		fmt.Printf("it's a %T", i)
-	case <-cs: // or the value received can be discarded.
+	case <-cs:
 		fmt.Println("it's a string")
-	case <-ccs: // Empty channel, not ready for communication.
+	case <-ccs:
 		fmt.Println("didn't happen.")
 	}
 
-	learnWebProgramming() // Go does it. You want to do it too.
+	learnWebProgramming()
 }
 
 func learnWebProgramming() {
 
 	go func() {
 		err := http.ListenAndServe(":8080", pair{})
-		fmt.Println(err) // don't ignore errors
+		fmt.Println(err)
 	}()
 
 	requestServer()
